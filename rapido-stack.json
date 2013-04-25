@@ -1,0 +1,22 @@
+{
+    "scaffold.blog.dir": "scaffolds/blog",
+    "scaffold.post.dir": "scaffolds/post",
+
+    "name": "velociblog",
+    "description": "Commands for Velociblog",
+    
+    "commands": {
+        "create": {
+            "description": "Creates a new blog",
+            "file": "commands/command-create.js"
+        },
+        "create post": {
+            "description": "Creates a new blog post",
+            "file": "commands/command-create-post.js"
+        },
+        "build": {
+            "description": "Build the blog",
+            "file": "commands/command-build.js"
+        }
+    }
+}

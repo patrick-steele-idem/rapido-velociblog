@@ -1,0 +1,21 @@
+{
+    "title": "{title}",
+    "subtitle": "{subtitle}",
+    "description": "{description}",
+    "author": "{author}",
+    "layouts": {
+        "post": {
+            "sections": {
+                "aside": [
+                    {
+                        "component": "blog/ui/RecentPosts",
+                        "input": {
+                            "count": 5
+                        },
+                        "visible": true  
+                    }
+                ]
+            }
+        }
+    }
+}

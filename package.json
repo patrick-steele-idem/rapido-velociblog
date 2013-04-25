@@ -1,0 +1,26 @@
+{
+  "name": "rapido-velociblog",
+  "version": "0.1.0",
+  "description": "Rápido Stack for Velociblog",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/patrick-steele-idem/rapido-velociblog.git"
+  },
+  "keywords": [
+    "rapido",
+    "raptorjs",
+    "blog",
+    "site",
+    "generator",
+    "static"
+  ],
+  "author": "Patrick Steele-Idem <pnidem@gmail.com>",
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "velociblog": "~0.1.0"
+  }
+}
