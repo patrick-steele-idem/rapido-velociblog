@@ -4,6 +4,24 @@ var path = require('path');
 var resources = require('raptor/resources');
 var cwd = process.cwd();
 
+
+ function rmdir(dirPath) {
+    var files = fs.readdirSync(dirPath);
+    if (files.length > 0) {
+        for (var i = 0; i < files.length; i++) {
+            var filePath = dirPath + '/' + files[i];
+            if (fs.statSync(filePath).isFile()) {
+                fs.unlinkSync(filePath);
+            }
+            else {
+                rmdir(filePath);
+            }
+        }
+    }
+
+    fs.rmdirSync(dirPath);
+}
+
 module.exports = {
     usage: 'Usage: $0 build',
 
@@ -15,6 +33,10 @@ module.exports = {
         'prod': {
             type: 'boolean',
             describe: 'Production mode'
+        },
+        'watch': {
+            type: 'boolean',
+            describe: 'Watch for changes'
         }
     },
 
@@ -36,7 +58,8 @@ module.exports = {
         }
 
         return {
-            environment: environment
+            environment: environment,
+            watchEnabled: args.watch === true
         };
     },
 
@@ -63,11 +86,11 @@ module.exports = {
 
             var blogProperties = JSON.parse(blogConfigFile.readAsString());
             var postsDir = path.resolve(cwd, blogProperties['postsDir'] || 'posts');
-            var optimizerConfigPath = path.resolve(cwd, blogProperties['optimizerConfigFile'] || "optimizer-config.xml");
+            var optimizerConfigPath = path.resolve(cwd, blogProperties['optimizerConfigFile'] || "config/optimizer-config.xml");
 
             if (files.exists(optimizerConfigPath)) {
                 require('raptor/optimizer').configure(
-                    optimizerConfigPath, 
+                    optimizerConfigPath,
                     {
                         profile: environment
                     });
@@ -78,34 +101,86 @@ module.exports = {
                     resources.addSearchPathDir(path);
                 }
             }
-
-            addSearchPathDir(path.join(__dirname, 'raptor_modules'));
+            var velociblog = require('velociblog');
             addSearchPathDir(cwd);
-            addSearchPathDir(path.join(cwd, 'modules'));
-            addSearchPathDir(path.join(cwd, 'raptor_modules'));
 
             require('raptor/templating/compiler').setWorkDir(path.join(cwd, "work"));
-            
+
             var outputDir = blogProperties['outputDir'] || 'build';
             outputDir = path.resolve(cwd, outputDir);
 
-            require('velociblog').create()
-                .postsDir(postsDir)
-                .theme(blogProperties.theme || 'default')
-                .properties(blogProperties)
-                .includeFilenamesInUrls(environment === 'development')
-                .afterPostWritten(function(eventArgs) {
-                    var outputFile = eventArgs.outputFile;
-                    rapido.log.info('Blog post written to "' + outputFile.getAbsolutePath() + '"');
-                })
-                .generate(outputDir)
-                .then(
-                    function() {
-                        rapido.log.info("Blog generated");
-                    },
-                    function(e) {
-                        onError(e);
-                    });
+            var watchEnabled = args.watchEnabled;
+
+            function generateBlog() {
+                console.log("[velociblog] Generating blog...");
+
+                velociblog.create()
+                    .postsDir(postsDir)
+                    .theme(blogProperties.theme || 'default')
+                    .properties(blogProperties)
+                    .includeFilenamesInUrls(environment === 'development')
+                    .afterPostWritten(function(eventArgs) {
+                        var outputFile = eventArgs.outputFile;
+                        rapido.log.info('Blog post written to "' + outputFile.getAbsolutePath() + '"');
+                    })
+                    .generate(outputDir)
+                    .then(
+                        function() {
+                            rapido.log.info("Blog generated");
+                        },
+                        function(e) {
+                            onError(e);
+                        });
+            }
+
+            generateBlog();
+
+            var watchPaths = blogProperties.watch;
+            if (watchPaths) {
+                watchPaths = watchPaths.map(function(watchPath) {
+                    return path.resolve(cwd, watchPath);
+                });
+            }
+
+
+            if (watchEnabled) {
+                var hotReloader = require('raptor-hot-reload').create(require)
+                    .loggingEnabled(true)
+                    // Uncache all cached Node modules
+                    .uncache('*')
+                    // By-pass the full reload for certain files
+                    .specialReload('*.css', function() {
+                        // Do nothing
+                    })
+                    .specialReload('*.rtld', function() {
+                        // Do nothing
+                        rmdir(path.join(outputDir, 'static'));
+                        generateBlog();
+                    })
+                    .specialReload('*.rhtml', function() {
+                        // Do nothing
+                        generateBlog();
+                    })
+                    // Configure which directories/files to watch:
+                    .watch(path.join(cwd, 'config'))
+                    .watch(path.join(cwd, 'posts'))
+                    .watch(path.join(cwd, 'blog.json'))
+                    .watch(watchPaths)
+                    // .watchExclude("*.css") //Ignore modifications to certain files
+
+                    // Register a listener for the "beforeReload" event"
+                    .beforeReload(function() {
+
+                    })
+
+                    // Register a listener for the "afterReload" event
+                    .afterReload(function(eventArgs) {
+                        // Re-initialize the application after a full reload
+                        generateBlog();
+                    })
+                    .start(); // Start watching for changes!
+            }
+
         }
         catch(e) {
             onError(e);

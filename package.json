@@ -21,6 +21,7 @@
   "author": "Patrick Steele-Idem <pnidem@gmail.com>",
   "readmeFilename": "README.md",
   "dependencies": {
-    "velociblog": "~0.1.0"
+    "velociblog": "~0.1.0",
+    "raptor-hot-reload": "~0.1.5"
   }
 }

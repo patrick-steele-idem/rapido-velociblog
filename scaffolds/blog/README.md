@@ -1,17 +1,17 @@
-Blog based on the Raptor Blogging system
+Blog based on Velociblog
 ========================================
 
 # Build (production)
 ```
-raptor-blog build
+blog build
 ```
 
 # Build (development)
 ```
-raptor-blog build --dev
+blog build --dev
 ```
 
 # Create a new blog post
 ```
-raptor-blog create post
+blog create post
 ```

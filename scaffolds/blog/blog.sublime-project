@@ -4,7 +4,7 @@
         {
             "cmd":
             [
-                "raptor-blog",
+                "blog",
                 "--dev"
             ],
             "name": "build (dev)",
@@ -13,7 +13,7 @@
         {
             "cmd":
             [
-                "raptor-blog"
+                "blog"
             ],
             "name": "build (production)",
             "working_dir": "${project_path}"
